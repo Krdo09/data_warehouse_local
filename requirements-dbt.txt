@@ -1,0 +1,5 @@
+# Requerimientos específicos para dbt, separados para evitar conflictos con otras dependencias del proyecto.
+dbt-core==1.7.19
+dbt-postgres==1.7.19
+# Dependencias legacy que dbt necesita
+protobuf>=4.0.0,<5.0.0
