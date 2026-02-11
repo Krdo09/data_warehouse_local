@@ -1,0 +1,21 @@
+# Git
+.git
+.gitignore
+
+# Python cache y entornos locales
+__pycache__
+*.pyc
+venv/
+.env_local
+.pytest_cache
+.mypy_cache
+
+# Airflow logs y datos temporales
+logs/
+plugins/
+temp/
+
+# dbt artifacts locales (para no sobreescribir los del contenedor)
+dbt_packages/
+target/
+dbt_modules/
