@@ -82,6 +82,13 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
     - ${AIRFLOW_PROJ_DIR:-.}/config:/opt/airflow/config
     - ${AIRFLOW_PROJ_DIR:-.}/plugins:/opt/airflow/plugins
+    # * Volumenes adicionales desde aquí
+    # Se añade volumen para scripts .py enfocados al ETL
+    - ${AIRFLOW_PROJ_DIR:-.}/scripts:/opt/airflow/scripts
+    # Se añade volumen para almacenar archivos .sql
+    - ${AIRFLOW_PROJ_DIR:-.}/sql:/opt/airflow/sql
+    # Se añade volumen para almacenar datos en formato .parquet
+    - ${AIRFLOW_PROJ_DIR:-.}/data:/opt/airflow/data
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
