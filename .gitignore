@@ -1,0 +1,4 @@
+# Archivos de configuración y credenciales
+*.env
+*.env.*
+!.env.example
