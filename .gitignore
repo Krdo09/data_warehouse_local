@@ -1,10 +1,24 @@
 # Archivos de configuración y credenciales
+# Sistema y entorno
+.DS_Store
+Thumbs.db
+__pycache__/
+*.pyc
+.venv/
+venv/
 *.env
 *.env.*
 !.env.example
 
-# Archivos con dependecias y paquetes
-dbt_packages/
+# Docker
+logs/
+plugins/
+
+# dbt
+dbt/
+dbt_project/dbt_packages/
+dbt_project/target/
+dbt_project/logs/
 
 # Archivos de logs 
 logs/
