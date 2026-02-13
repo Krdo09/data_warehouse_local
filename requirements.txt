@@ -14,3 +14,17 @@ sqlalchemy>=2.0.0
 requests>=2.31.0
 fastexcel>=0.10.0
 pydantic>=2.0.0
+
+# Proveedores de Airflow
+# SQL
+apache-airflow-providers-common-sql>=1.10.0
+apache-airflow-providers-postgres>=5.10.0
+# APIs
+apache-airflow-providers-http>=4.0.0
+# Docker
+apache-airflow-providers-docker>=3.0.0
+# Notificaciones
+apache-airflow-providers-slack>=8.0.0
+apache-airflow-providers-smtp>=1.0.0
+# Observabilidad: Para ver el flujo de los datos 
+apache-airflow-providers-openlineage>=1.0.0
