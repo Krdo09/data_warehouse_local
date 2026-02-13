@@ -98,6 +98,8 @@ x-airflow-common:
     - ${AIRFLOW_PROJ_DIR:-.}/sql:/opt/airflow/sql
     # Se añade volumen para almacenar datos en formato .parquet
     - ${AIRFLOW_PROJ_DIR:-.}/data:/opt/airflow/data
+    # Se añade volumen para almacenar el proyecto de dbt
+    - ${AIRFLOW_PROJ_DIR:-.}/dbt:/opt/airflow/dbt
   user: "${AIRFLOW_UID:-50000}:0"
   depends_on:
     &airflow-common-depends-on
