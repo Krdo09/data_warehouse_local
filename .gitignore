@@ -2,3 +2,9 @@
 *.env
 *.env.*
 !.env.example
+
+# Archivos con dependecias y paquetes
+dbt_packages/
+
+# Archivos de logs 
+logs/
