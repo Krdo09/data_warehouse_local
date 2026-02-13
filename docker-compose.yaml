@@ -82,6 +82,10 @@ x-airflow-common:
     PYTHONUNBUFFERED: "1"
     # Se añada variable para que python pueda reconocer los import de modulos desde la carpeta de scripts
     PYTHONPATH: "/opt/airflow/scripts"
+    # Se añade conxión a base de datos del DataWarehouse
+    # Formato nombre variable: AIRFLOW_CONN_{NOMBRE_CONN_EN_MAYUSCULAS}
+    # Sintaxis: postgresql://user:password@host:port/database
+    AIRFLOW_CONN_WAREHOUSE_POSTGRES: "postgresql://${WAREHOUSE_USER}:${WAREHOUSE_PASSWORD}@postgres:5432/${WAREHOUSE_DB}" 
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
