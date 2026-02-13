@@ -59,7 +59,7 @@ x-airflow-common:
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
     AIRFLOW__CORE__AUTH_MANAGER: airflow.providers.fab.auth_manager.fab_auth_manager.FabAuthManager
     # * Se modifica cadena de conexión a base de datos para usar postgresql
-    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${AIRFLOW_DB_USER}:${AIRFLOW_DB_PASSWORD}@postgres/${AIRFLOW_DB_NAME}
+    AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${AIRFLOW_DB_USER}:${AIRFLOW_DB_PASSWORD}@postgres/${AIRFLOW_DB_NAME}?client_encoding=utf8
     # * también se modifica backend de resultados para usar postgresql
     AIRFLOW__CELERY__RESULT_BACKEND: db+postgresql://${AIRFLOW_DB_USER}:${AIRFLOW_DB_PASSWORD}@postgres/${AIRFLOW_DB_NAME}
     AIRFLOW__CELERY__BROKER_URL: redis://:@redis:6379/0
@@ -82,6 +82,9 @@ x-airflow-common:
     PYTHONUNBUFFERED: "1"
     # Se añada variable para que python pueda reconocer los import de modulos desde la carpeta de scripts
     PYTHONPATH: "/opt/airflow/scripts"
+    # Encoding UTF-8
+    LANG: "en_US.UTF-8"
+    LC_ALL: "en_US.UTF-8"
     # Se añade conxión a base de datos del DataWarehouse
     # Formato nombre variable: AIRFLOW_CONN_{NOMBRE_CONN_EN_MAYUSCULAS}
     # Sintaxis: postgresql://user:password@host:port/database
@@ -232,6 +235,9 @@ services:
       POSTGRES_USER: ${WAREHOUSE_USER}
       POSTGRES_PASSWORD: ${WAREHOUSE_PASSWORD}
       POSTGRES_DB: ${WAREHOUSE_DB}
+      # Encoding UTF-8
+      LANG: "en_US.UTF-8"
+      LC_ALL: "en_US.UTF-8"
     volumes:
       - warehouse-db-volume:/var/lib/postgresql/data
     ports:
