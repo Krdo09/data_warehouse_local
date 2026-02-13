@@ -1,0 +1,20 @@
+CREATE TABLE raw.api_colombia_departamentos (
+	id INT PRIMARY KEY,
+	name VARCHAR(24),
+	description VARCHAR(1000),
+	cityCapitalId SMALLINT,
+	municipalities SMALLINT,
+	surface INT,
+	population INT,
+	phonePrefix CHAR(1),
+	countryId SMALLINT,
+	cityCapital JSONB,
+	country JSONB,
+	cities JSONB,
+	regionId SMALLINT,
+	region TEXT,
+	naturalAreas JSONB,
+	maps JSONB,
+	indigenousReservations JSONB,
+	airports JSONB
+)
