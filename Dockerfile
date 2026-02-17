@@ -58,8 +58,16 @@ RUN apt-get update \
   && apt-get install -y --no-install-recommends \
          libpq5 \
          git \
+         locales \
+&& sed -i -e 's/# en_US.UTF-8 UTF-8/en_US.UTF-8 UTF-8/' /etc/locale.gen \
+  && locale-gen \
   && apt-get clean \
   && rm -rf /var/lib/apt/lists/*
+
+  # Definimos las variables de entorno para que persistan en el contenedor final
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en \
+    LC_ALL=en_US.UTF-8
 
 USER airflow
 
