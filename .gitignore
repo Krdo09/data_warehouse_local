@@ -22,3 +22,6 @@ dbt_project/logs/
 
 # Archivos de logs 
 logs/
+
+# Carpetas en especifico que no se deben subir
+data_exploration/
