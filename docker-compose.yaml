@@ -136,6 +136,13 @@ services:
   postgres:
     <<: *aditional-services
     image: postgres:16
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1.5G   # Postgres ama la RAM para caché
+        reservations:
+          memory: 512M
     environment:
       POSTGRES_USER: ${AIRFLOW_DB_USER}
       POSTGRES_PASSWORD: ${AIRFLOW_DB_PASSWORD}
@@ -155,6 +162,13 @@ services:
     image: redis:7.2-bookworm
     expose:
       - 6379
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          memory: 128M
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
@@ -165,6 +179,14 @@ services:
 
   airflow-apiserver:
     <<: *airflow-common
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 1G
+        reservations:
+          cpus: '0.1'
+          memory: 256M
     command: api-server
     ports:
       - "${AIRFLOW_WEB_PORT}:8080"
@@ -183,6 +205,14 @@ services:
   airflow-scheduler:
     <<: *airflow-common
     command: scheduler
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 2G     
+        reservations:
+          cpus: '0.25'
+          memory: 512M
     healthcheck:
       test: ["CMD", "curl", "--fail", "http://localhost:8974/health"]
       interval: 30s
@@ -198,6 +228,14 @@ services:
   airflow-dag-processor:
     <<: *airflow-common
     command: dag-processor
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G    
+        reservations:
+          cpus: '0.25'
+          memory: 256M
     healthcheck:
       test: ["CMD-SHELL", 'airflow jobs check --job-type DagProcessorJob --hostname "$${HOSTNAME}"']
       interval: 30s
@@ -213,6 +251,16 @@ services:
   airflow-worker:
     <<: *airflow-common
     command: celery worker
+    deploy:
+      resources:
+        limits:
+          # Límite duro. Si el worker intenta usar más de 4GB, Docker lo matará (OOMKilled).
+          memory: 4G
+          cpus: '2.0'
+        reservations:
+          # Reserva mínima garantizada para que el worker arranque y sea estable.
+          memory: 1G
+          cpus: '0.5'
     healthcheck:
       # yamllint disable rule:line-length
       test:
@@ -238,6 +286,13 @@ services:
   airflow-triggerer:
     <<: *airflow-common
     command: triggerer
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+        reservations:
+          memory: 128M
     healthcheck:
       test: ["CMD-SHELL", 'airflow jobs check --job-type TriggererJob --hostname "$${HOSTNAME}"']
       interval: 30s
@@ -262,6 +317,13 @@ services:
       # Encoding UTF-8
       LANG: "en_US.UTF-8"
       LC_ALL: "en_US.UTF-8"
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'     # Permite paralelismo en queries complejos
+          memory: 2G      # Necesario para ingerir cargas masivas sin ahogarse
+        reservations:
+          memory: 512M    # Garantiza que siempre tenga un mínimo para arrancar
     volumes:
       - warehouse-db-volume:/var/lib/postgresql/data
     ports:
@@ -281,6 +343,13 @@ services:
       POSTGRES_USER: ${MARQUEZ_DB_USER}
       POSTGRES_PASSWORD: ${MARQUEZ_DB_PASSWORD}
       POSTGRES_DB: ${MARQUEZ_DB_NAME}
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          memory: 256M
     volumes:
       - marquez-db-data:/var/lib/postgresql/data
     healthcheck:
@@ -329,6 +398,13 @@ services:
       - MARQUEZ_HOST=marquez-api
       - MARQUEZ_PORT=5000
       - WEB_PORT=3000
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'     # No necesita mucha CPU para renderizar UI
+          memory: 512M    # Node.js suele estar cómodo aquí
+        reservations:
+          memory: 128M
     ports:
       - "3000:3000" # Accederás por http://localhost:3000
     depends_on:
@@ -448,6 +524,13 @@ services:
   flower:
     <<: *airflow-common
     command: celery flower
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M    # Rara vez pasará de 100MB
+        reservations:
+          memory: 64M
     # profiles:
     #  - flower
     ports:
