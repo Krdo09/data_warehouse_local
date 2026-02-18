@@ -41,7 +41,7 @@ def fetch_data_from_api(
     :return: DataFrame de Polars con los datos obtenidos de la API
     :rtype: `pl.DataFrame`
     """
-    logger.info(f'Fetching data from API, URL: "{url}"')
+    logger.info(f"Fetching data from API, URL: '{url}'")
 
     try:
         # Realizar llamado a la API con un timeout para evitar bloqueos prolongados
