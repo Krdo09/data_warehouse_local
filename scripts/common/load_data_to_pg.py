@@ -1,14 +1,23 @@
+import logging
 import os
 import polars as pl
-from typing import Any, TYPE_CHECKING
 from sqlalchemy import create_engine
+from typing import Any, TYPE_CHECKING
 
+# Validación de tipospara parametros de funciones
 if TYPE_CHECKING:
     from polars import DataFrame
+
+# Configurración de logging
+logger = logging.getLogger(__name__)
+# Activar visualizacion de logs a nivel INFO
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 def load_data_to_pg(
         df: "pl.DataFrame", 
         table_name: str,
+        connection_uri: str,
         **kwargs: Any
     ) -> None:
     """
@@ -24,26 +33,18 @@ def load_data_to_pg(
     :type kwargs: `keyword arguments`
     :return: `None`
     """
-    # Obtener URI de conexión desde variable de entorno
-    conn_uri = os.getenv('AIRFLOW_CONN_WAREHOUSE_POSTGRES')
-
     # Crear motor de conexión
-    engine = create_engine(conn_uri)
+    logging.info(f"Creating database engine with URI: '{connection_uri}'")
+    engine = create_engine(connection_uri)
 
-    try:
-        print(f"Loading data into PostgreSQL table '{table_name}'...")
-
-        # Se deja que el usuario especifique si desea reemplazar o agregar a la tabla existente a través de kwargs
-        # Adicional a esto, se pueden pasar otros argumentos compatibles con pl.DataFrame.write_database a través de kwargs
+    # Establecer conexión y cargar datos a postgreSQL utilizando el método write_database de Polars, que es compatible con SQLAlchemy
+    with engine.begin() as connection:
+        logging.info(f"Loading data, rows {df.height} into PostgreSQL table '{table_name}'...")
         df.write_database(
             table_name=table_name,
-            connection=engine,
+            connection=connection,
             engine='sqlalchemy',
             **kwargs
         )
 
-        print(f"Data loaded successfully into PostgreSQL table '{table_name}'.")
-
-    except Exception as e:
-        print(f"Error loading data into PostgreSQL: {e}")
-        raise e
+        logging.info(f"Data loaded successfully into table '{table_name}'")
