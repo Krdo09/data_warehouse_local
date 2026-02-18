@@ -44,6 +44,15 @@
 #
 # Feel free to modify this file to suit your needs.
 ---
+# Configuraciones comunes para servicios adicionales
+x-aditional_services:
+  &aditional-services
+    # Configurar el driver de logging para limitar el tamaño de los archivos de log y evitar problemas de almacenamiento en entornos locales
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
 x-airflow-common:
   &airflow-common
   # In order to add custom dependencies or upgrade provider distributions you can use your extended image.
@@ -54,6 +63,11 @@ x-airflow-common:
   build: .
   env_file:
     - ${ENV_FILE_PATH:-.env}
+  logging:
+    driver: "json-file"
+    options:
+      max-size: "10m"
+      max-file: "3"
   environment:
     &airflow-common-env
     AIRFLOW__CORE__EXECUTOR: CeleryExecutor
@@ -88,7 +102,14 @@ x-airflow-common:
     # Se añade conxión a base de datos del DataWarehouse
     # Formato nombre variable: AIRFLOW_CONN_{NOMBRE_CONN_EN_MAYUSCULAS}
     # Sintaxis: postgresql://user:password@host:port/database
-    AIRFLOW_CONN_WAREHOUSE_POSTGRES: "postgresql://${WAREHOUSE_USER}:${WAREHOUSE_PASSWORD}@warehouse:5432/${WAREHOUSE_DB}" 
+    AIRFLOW_CONN_WAREHOUSE_POSTGRES: "postgresql://${WAREHOUSE_USER}:${WAREHOUSE_PASSWORD}@warehouse:5432/${WAREHOUSE_DB}"
+    # Configuración de OpenLineage
+    # Habilitar integración con Airflow
+    AIRFLOW__OPENLINEAGE__DISABLED: "false"
+    # Definir URL del servidor de Marquez para enviar los eventos de OpenLineage
+    AIRFLOW__OPENLINEAGE__TRANSPORT: '{"type": "http", "url": "http://marquez-api:5000"}'
+    # Definir las tareas bajo un mismo proyecto en Marquez
+    AIRFLOW__OPENLINEAGE__NAMESPACE: "data_warehouse_production"
   volumes:
     - ${AIRFLOW_PROJ_DIR:-.}/dags:/opt/airflow/dags
     - ${AIRFLOW_PROJ_DIR:-.}/logs:/opt/airflow/logs
@@ -113,6 +134,7 @@ x-airflow-common:
 
 services:
   postgres:
+    <<: *aditional-services
     image: postgres:16
     environment:
       POSTGRES_USER: ${AIRFLOW_DB_USER}
@@ -228,8 +250,10 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
+  # * Nuevos seervicios desde aquí
   # Se añade base de datos postgre para simular un DataWarehouse
   warehouse:
+    <<: *aditional-services
     image: postgres:16
     environment:
       POSTGRES_USER: ${WAREHOUSE_USER}
@@ -247,6 +271,69 @@ services:
       test: ["CMD", "pg_isready", "-U", "${WAREHOUSE_USER}", "-d", "${WAREHOUSE_DB}"]
       interval: 10s
       retries: 5
+
+  # Se añade base de datos postgre para OpenLineage
+  marquez-db:
+    <<: *aditional-services
+    image: postgres:14
+    container_name: marquez-db
+    environment:
+      POSTGRES_USER: ${MARQUEZ_DB_USER}
+      POSTGRES_PASSWORD: ${MARQUEZ_DB_PASSWORD}
+      POSTGRES_DB: ${MARQUEZ_DB_NAME}
+    volumes:
+      - marquez-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "${MARQUEZ_DB_USER}", "-d", "${MARQUEZ_DB_NAME}"]
+      interval: 10s
+      retries: 5
+    restart: always
+  
+  # Api de Marquez para OpenLineage
+  marquez-api:
+    <<: *aditional-services
+    image: marquezproject/marquez:latest
+    container_name: marquez-api
+    environment:
+        # Se carga archivo de configuración 
+      - MARQUEZ_CONFIG=/opt/marquez/marquez.yml
+      - MARQUEZ_DB_NAME=${MARQUEZ_DB_NAME}
+      - MARQUEZ_DB_USER=${MARQUEZ_DB_USER}
+      - MARQUEZ_DB_PASSWORD=${MARQUEZ_DB_PASSWORD}
+      - MARQUEZ_API_PORT=${MARQUEZ_API_PORT}
+      - MARQUEZ_ADMIN_PORT=${MARQUEZ_ADMIN_PORT}
+      # Limitar uso de memoria paara java y evitar problemas de rendimiento en entornos con recursos limitados
+      - MARQUEZ_OPTS=-Xmx512m -Xms256m
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'    # Máximo 1 CPU
+          memory: 1G     # Máximo 1GB de RAM (físico)
+        reservations:
+          memory: 512M   # Garantizar al menos 512MB
+    ports:
+      - "${MARQUEZ_API_PORT}:${MARQUEZ_API_PORT}"
+      - "${MARQUEZ_ADMIN_PORT}:${MARQUEZ_ADMIN_PORT}"
+    volumes:
+      - ${AIRFLOW_PROJ_DIR:-.}/config/marquez.yml:/opt/marquez/marquez.yml
+    depends_on:
+      marquez-db:
+        condition: service_healthy
+    restart: always
+
+  # Web services de Marquez para OpenLineage
+  marquez-web:
+    image: marquezproject/marquez-web:latest
+    container_name: marquez-web
+    environment:
+      - MARQUEZ_HOST=marquez-api
+      - MARQUEZ_PORT=5000
+      - WEB_PORT=3000
+    ports:
+      - "3000:3000" # Accederás por http://localhost:3000
+    depends_on:
+      - marquez-api
+    restart: always
 
   airflow-init:
     <<: *airflow-common
@@ -381,3 +468,5 @@ volumes:
   postgres-db-volume:
   # Volumen con base de datos para simular un DataWarehouse
   warehouse-db-volume:
+  # Volumen con base de datos para Marquez (OpenLineage)
+  marquez-db-data:
