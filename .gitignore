@@ -9,16 +9,17 @@ venv/
 *.env
 *.env.*
 !.env.example
+.vscode/
 
 # Docker
 logs/
 plugins/
 
 # dbt
-dbt/
-dbt_project/dbt_packages/
-dbt_project/target/
-dbt_project/logs/
+dbt/dbt_packages/
+dbt/target/
+dbt/.user.yml
+dbt/package-lock.yml
 
 # Archivos de logs 
 logs/
