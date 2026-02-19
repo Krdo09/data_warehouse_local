@@ -1,9 +1,16 @@
-import polars as pl
 import json
+import logging
+import polars as pl
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from polars import DataFrame
+
+# Configurración de logging
+logger = logging.getLogger(__name__)
+# Activar visualizacion de logs a nivel INFO
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
+
 
 def json_string(df: "pl.DataFrame") -> "pl.DataFrame":
     """
@@ -16,8 +23,7 @@ def json_string(df: "pl.DataFrame") -> "pl.DataFrame":
     :return: DataFrame de Polars con las columnas de tipo Struct o List convertidas a cadenas JSON.
     :rtype: `pl.DataFrame`
     """
-
-    print("Processing JSON data...")
+    logging.info("Starting JSON colums processing for Struct and List columns.")
 
     # Consultar estructura del DataFrame
     schema = df.schema
@@ -29,17 +35,20 @@ def json_string(df: "pl.DataFrame") -> "pl.DataFrame":
 
     if cols_to_json:
         # Aplicamos json.dumps a cada celda de esas columnas
-        print(f"    -> Processing columns: {cols_to_json}")
+        cols_str = "".join([f"\n                                    - {col}" for col in cols_to_json])
+        logging.info(f"Columns to process: {cols_str}")
         df = df.with_columns([
             pl.col(col).map_elements(
+                # ! WARNIG json.dumps no soportar operaciones vectorizadas, por lo que se aplicará a cada elemento 
+                # ! individualmente a través de map_elements, lo que puede ser lento para grandes DataFrames.
                 lambda x: json.dumps(x, ensure_ascii=False) if x is not None else None, 
                 return_dtype=pl.String
             ).alias(col) 
             for col in cols_to_json
         ])
 
-        print("JSON processing completed.")
+        logging.info("JSON  columns processing completed.")
         return df
     
     else:
-        print("No columns to process.")
+        logging.info("No columns to process.")
