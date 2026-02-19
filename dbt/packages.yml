@@ -1,0 +1,10 @@
+packages:
+  # 1. dbt-utils: La "navaja suiza" de dbt.
+  # Trae macros para generar keys, fechas, deduplicar, pivotear, etc.
+  - package: dbt-labs/dbt_utils
+    version: 1.3.3
+
+  # 2. dbt-expectations: Tests de calidad de datos avanzados.
+  # Permite validar formatos de fecha, regex, tipos de datos, etc.
+  - package: metaplane/dbt_expectations
+    version: 0.10.10

@@ -1,0 +1,37 @@
+name: 'data_warehouse_dbt'
+version: '1.0.0'
+config-version: 2
+
+require-dbt-version: ">=1.8.0"
+
+# Debe coincidir con el nombre en profiles.yml
+profile: 'default'
+
+# Carpetas estándar
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets: 
+  - "target"
+  - "dbt_packages"
+
+# Configuración de Modelos (Global)
+models:
+  data_warehouse_dbt:
+    # Configuración por defecto: todo se crea como vistas
+    +materialized: view
+    
+    # Subcarpeta 'staging' (capa de limpieza)
+    staging:
+      +materialized: view
+      +schema: staging
+
+    # Subcarpeta 'marts' (capa final de negocio)
+    marts:
+      +materialized: table
+      +schema: analytics
