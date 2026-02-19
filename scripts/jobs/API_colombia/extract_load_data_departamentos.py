@@ -28,10 +28,14 @@ def transform_departamentos_data(df: "pl.DataFrame") -> "pl.DataFrame":
 
 
 def load_departamentos_data(df: "pl.DataFrame") -> None:
+    # Obtener URI de conexión desde variable de entorno
+    conn_uri = os.getenv('AIRFLOW_CONN_WAREHOUSE_POSTGRES')
+    
     # Cargar datos a PostgreSQL utilizando la función genérica load_data_to_pg
     load_data_to_pg(
         df,
         'raw.api_colombia_departamentos',
+        connection_uri=conn_uri,
         if_table_exists='replace'
     )
     
